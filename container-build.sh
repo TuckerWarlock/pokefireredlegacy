@@ -59,15 +59,19 @@ echo "Container runtime: $RUNTIME_NAME"
 echo "Building: $(tr '[:lower:]' '[:upper:]' <<< "$GAME") ($(tr '[:lower:]' '[:upper:]' <<< "$COMPILER") GCC)"
 echo ""
 
-# Determine make target
+# Determine make target and container name
 if [[ "$GAME" == "leafgreen" && "$COMPILER" == "modern" ]]; then
     MAKE_TARGET="leafgreen_modern"
+    CONTAINER_NAME="pokefirered-builder-leafgreen-modern"
 elif [[ "$GAME" == "leafgreen" ]]; then
     MAKE_TARGET="leafgreen"
+    CONTAINER_NAME="pokefirered-builder-leafgreen-legacy"
 elif [[ "$COMPILER" == "modern" ]]; then
     MAKE_TARGET="firered_modern"
+    CONTAINER_NAME="pokefirered-builder-firered-modern"
 else
     MAKE_TARGET="firered"
+    CONTAINER_NAME="pokefirered-builder-firered-legacy"
 fi
 
 # Build container image with x86-64 platform
@@ -86,8 +90,9 @@ BUILD_INSIDE_CMD="cd /workspace && make clean && make $MAKE_TARGET && find /work
 
 # Run the container
 if [[ "$IS_APPLE_CONTAINER" == "true" ]]; then
-    # Apple container: use create/start for better compatibility
+    # Apple container: use create/start with named container
     CONTAINER_ID=$($CONTAINER_CMD create \
+        --name "$CONTAINER_NAME" \
         -v "$OUTPUT_DIR:/output" \
         pokefirered-builder:latest \
         bash -c "$BUILD_INSIDE_CMD")
@@ -95,8 +100,8 @@ if [[ "$IS_APPLE_CONTAINER" == "true" ]]; then
     $CONTAINER_CMD start -a "$CONTAINER_ID" 2>&1 | tail -100
     $CONTAINER_CMD rm "$CONTAINER_ID" 2>/dev/null || true
 else
-    # Docker/Podman: use standard run
-    $CONTAINER_CMD run --rm \
+    # Docker/Podman: use standard run with named container
+    $CONTAINER_CMD run --rm --name "$CONTAINER_NAME" \
         -v "$OUTPUT_DIR:/output" \
         pokefirered-builder:latest \
         bash -c "$BUILD_INSIDE_CMD"
