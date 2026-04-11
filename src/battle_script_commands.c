@@ -5406,7 +5406,7 @@ static void Cmd_getmoneyreward(void)
         if (gTrainerBattleOpponent_A == TRAINER_SECRET_BASE)
         {
             lastMonLevel = gBattleResources->secretBase->party.levels[0];
-            moneyReward = lastMonLevel * 40 * gBattleStruct->moneyMultiplier;
+            moneyReward = lastMonLevel * 80 * gBattleStruct->moneyMultiplier;
         }
         else
         {
@@ -5419,7 +5419,7 @@ static void Cmd_getmoneyreward(void)
             {
                 if (gTrainerMoneyTable[i].classId == gTrainers[gTrainerBattleOpponent_A].trainerClass)
                 {
-                    moneyReward = lastMonLevel * 8 * gBattleStruct->moneyMultiplier * (gBattleTypeFlags & BATTLE_TYPE_DOUBLE ? 2 : 1) * gTrainerMoneyTable[i].value;
+                    moneyReward = lastMonLevel * 16 * gBattleStruct->moneyMultiplier * (gBattleTypeFlags & BATTLE_TYPE_DOUBLE ? 2 : 1) * gTrainerMoneyTable[i].value;
                     break;
                 }
             }
