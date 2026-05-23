@@ -49,6 +49,7 @@ fi
 
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
+rm -f "$OUTPUT_DIR"/poke*.gba
 
 echo "========================================="
 echo "Pokémon FireRed/LeafGreen Legacy"
@@ -74,6 +75,12 @@ else
     CONTAINER_NAME="pokefirered-builder-firered-legacy"
 fi
 
+if [[ "$COMPILER" == "modern" ]]; then
+    ROM_FILE="pokere${GAME}_modern.gba"
+else
+    ROM_FILE="pokere${GAME}.gba"
+fi
+
 # Build container image with x86-64 platform
 echo "[1/3] Building x86-64 container image..."
 echo "      (First build may take a few minutes)"
@@ -86,7 +93,7 @@ echo "[2/3] Building ROM inside x86-64 container..."
 echo ""
 
 # Build command that runs inside container
-BUILD_INSIDE_CMD="cd /workspace && make clean && make $MAKE_TARGET && find /workspace -name 'poke*.gba' -type f -newer /workspace/Makefile -exec cp {} /output/ \;"
+BUILD_INSIDE_CMD="cd /workspace && make clean && make $MAKE_TARGET && cp /workspace/$ROM_FILE /output/"
 
 # Run the container
 if [[ "$IS_APPLE_CONTAINER" == "true" ]]; then
@@ -111,12 +118,11 @@ echo ""
 echo "[3/3] Checking build results..."
 
 # Check if ROM was built
-if ls "$OUTPUT_DIR"/poke*.gba >/dev/null 2>&1; then
-    ROM_FILE=$(ls -1 "$OUTPUT_DIR"/poke*.gba | head -1)
-    ROM_NAME=$(basename "$ROM_FILE")
-    ROM_SIZE=$(du -h "$ROM_FILE" | cut -f1)
+if [[ -f "$OUTPUT_DIR/$ROM_FILE" ]]; then
+    ROM_PATH="$OUTPUT_DIR/$ROM_FILE"
+    ROM_SIZE=$(du -h "$ROM_PATH" | cut -f1)
     
-    echo "✓ ROM built: $ROM_NAME"
+    echo "✓ ROM built: $ROM_FILE"
     echo "✓ Size: $ROM_SIZE"
     echo "✓ Location: $OUTPUT_DIR/"
     
@@ -125,7 +131,7 @@ if ls "$OUTPUT_DIR"/poke*.gba >/dev/null 2>&1; then
     echo "✓ Build Complete!"
     echo "========================================="
     echo ""
-    echo "ROM ready at: $ROM_FILE"
+    echo "ROM ready at: $ROM_PATH"
 else
     echo "✗ ROM file not found in output directory"
     echo ""
